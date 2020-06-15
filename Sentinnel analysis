@@ -1,0 +1,86 @@
+# reading a single document
+readLines("keroche.txt")
+txt <- paste(readLines("keroche.txt"),collapse = " ")#collapsing into one document and specifying what to separate them
+txt
+
+#Data cleaning
+
+f <- gsub(pattern = "\\W",replace=" ",txt)#  W must be capital find spaces in a text and replaces it with what you specify
+d <- gsub(pattern = "\\d",replace=" ",f)#finds digits in replace and removes them
+tolower(d) #replacing the upper cases to lower cases
+library(tm)
+removeWords(d,stopwords()) #removing unnecessary words like and got between
+d <- removeWords(d,stopwords())
+d <- gsub(pattern = "\\b[a-z]\\b[1]",replace=" ",d) #replacing single words that might be left after removing digits
+stripWhitespace(d)# removes the spaces creaated with the replace function to single space
+
+txtbag <- str_split(d,pattern = "\\s+")#removes spaces and any that might have remained
+
+str(str_split(d,pattern = "\\s+"))
+
+class(txtbag)
+txtbag <- unlist(txtbag) #we should unlist our data set
+library(plyr)
+library(stringr)
+library(wordcloud)
+#bring mathching document into r
+positive <- scan('positive.txt',what = 'character',comment.char = ";")
+negative <- scan('negative.txt',what = 'character',comment.char = ";")
+sum(!is.na(match(txtbag,positive)))
+sum(!is.na(match(txtbag,negative)))
+score <- sum(!is.na(match(txtbag,positive)))-sum(!is.na(match(txtbag,negative)))
+score
+wordcloud(txtbag,min.freq = 2,random.order = F,scale = c(3,0.5),colors = rainbow(7))
+
+2.# multiple document analysis
+folder <- list.files(path = "C:/Users/HP/Documents", pattern = "*.txt", full.names = T)
+v <- folder %>% map(read_lines) 
+v
+corpus <- lapply(v,FUN=paste,collapse = " ")#collapsing into one document and specifying what to separate them
+#Data cleaning
+
+v <- gsub(pattern = "\\W",replace=" ",corpus)#  W must be capital find spaces in a text and replaces it with what you specify
+v <- gsub(pattern = "\\d",replace=" ",v)#finds digits in replace and removes them
+v <- tolower(v) #replacing the upper cases to lower cases
+v <- removeWords(v,stopwords('english'))
+v <- gsub(pattern = "\\b[a-z]\\b[1]",replace=" ",v) #replacing single words that might be left after removing digits
+v <- stripWhitespace(v)# getting rid of white spaces
+txtbag1 <-str_split(v,pattern = "\\s+")#removes spaces and any that might have remained
+str(str_split(v,pattern = "\\s+"))
+class(txtbag1) 
+hgo <- unlist(txtbag1) # dont unlist during combining documents
+library(plyr)
+library(stringr)
+library(wordcloud)
+wordcloud(hgo,min.freq = 2,random.order = F,scale = c(3,0.5),colors = rainbow(7))
+
+#to tease out where each text came from in the word cloud
+k <- Corpus(VectorSource(txtbag1))
+x11()# opening new graphics device
+tdm <- TermDocumentMatrix(k)
+as.matrix(tdm)#convert it into a matrix
+f <- as.matrix(tdm)
+colnames(f)
+#changing colname
+colnames(f) <- c("echesa","fire","keroche","uhuru")
+
+comparison.cloud(f)
+
+#sentiment analysis
+
+positive <- scan('positive.txt',what = 'character',comment.char = ";")
+negative <- scan('negative.txt',what = 'character',comment.char = ";")
+##we go to initial combined document and split it using the below command
+jj <- str_split(v,pattern = "\\s+") ##to get a bag of wards for comparisson
+jj
+g <- lapply(jj,function(x){sum(!is.na(match(x,positive)))})
+c <- lapply(jj,function(x){sum(!is.na(match(x,negative)))})
+score <- lapply(jj,function(x){sum(!is.na(match(x,positive)))-sum(!is.na(match(x,negative)))})
+
+unlist(score)
+# you can now find the discriptive analysis
+mean(g)
+sd(g) #finding the variance of my sentiment
+hist(g)
+
+
